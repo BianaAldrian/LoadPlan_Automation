@@ -1,15 +1,15 @@
 package org.example.loadplan_automation;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -17,10 +17,7 @@ import org.json.JSONObject;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.ResourceBundle;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class HelloController implements Initializable {
@@ -30,6 +27,7 @@ public class HelloController implements Initializable {
     private final Set<String> allDivisions = new HashSet<>();
     private final Set<String> allGradeLevels = new HashSet<>();
     private final LinkedHashSet<Integer> selectedSchoolIDs = new LinkedHashSet<>();
+
     @FXML
     private ComboBox<String> drop_region;
     @FXML
@@ -95,7 +93,7 @@ public class HelloController implements Initializable {
         generate.setOnAction(event -> {
             System.out.println("Selected School IDs: " + selectedSchoolIDs);
 
-            readExcelFile();
+            readExcelFile(selectedSchoolIDs);
         });
     }
 
@@ -136,7 +134,7 @@ public class HelloController implements Initializable {
         new Thread(() -> {
             try {
                 // Construct URL with query parameter
-                String urlString = "http://192.168.1.229/NIKKA/get_data.php";
+                String urlString = "http://192.168.254.104/NIKKA/get_data.php";
                 URL url = new URL(urlString);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
@@ -150,33 +148,47 @@ public class HelloController implements Initializable {
                 in.close();
                 conn.disconnect();
 
-                // Print the response content for debugging
-                System.out.println(content);
-
                 // Parse JSON data
                 JSONObject json = new JSONObject(content.toString());
+
+                // Map to keep track of schoolID and Region_model
+                Map<Integer, Region_model> schoolMap = new HashMap<>();
 
                 for (String tableName : json.keySet()) {
                     JSONArray tableData = json.getJSONArray(tableName);
                     for (int i = 0; i < tableData.length(); i++) {
                         JSONObject row = tableData.getJSONObject(i);
-                        Region_model regionModel = new Region_model(
-                                row.getString("Region"),
-                                row.getString("Division"),
-                                row.getInt("SchoolID"),
-                                row.getString("School Name"),
-                                row.getString("GradeLevel")
-                        );
-                        list.add(regionModel);
+                        int schoolID = row.getInt("SchoolID");
+                        String gradeLevel = row.getString("GradeLevel");
 
+                        if (schoolMap.containsKey(schoolID)) {
+                            // If schoolID already exists, modify the existing Region_model
+                            Region_model existingModel = schoolMap.get(schoolID);
+                            String existingGradeLevel = existingModel.getGradeLevel();
+                            String newGradeLevel = existingGradeLevel + "," + gradeLevel;
+                            existingModel.setGradeLevel(newGradeLevel);
+                        } else {
+                            // If schoolID does not exist, create a new Region_model
+                            Region_model regionModel = new Region_model(
+                                    row.getString("Region"),
+                                    row.getString("Division"),
+                                    schoolID,
+                                    row.getString("School Name"),
+                                    gradeLevel
+                            );
+                            list.add(regionModel);
+                            schoolMap.put(schoolID, regionModel);
+                        }
+
+                        // Collect other data as needed
                         regions.add(row.getString("Region"));
                         allDivisions.add(row.getString("Division"));
-                        allGradeLevels.add(row.getString("GradeLevel"));
+                        allGradeLevels.add(gradeLevel);
                     }
                 }
 
                 // Update ComboBoxes and TableView on JavaFX Application Thread
-                javafx.application.Platform.runLater(() -> {
+                Platform.runLater(() -> {
                     ObservableList<String> regionItems = FXCollections.observableArrayList(regions);
                     regionItems.add(0, "All");
                     drop_region.setItems(regionItems);
@@ -201,6 +213,7 @@ public class HelloController implements Initializable {
             }
         }).start();
     }
+
 
     private void filterList() {
         String selectedRegion = drop_region.getValue();
@@ -248,37 +261,139 @@ public class HelloController implements Initializable {
         drop_grade.setValue("All"); // Set default value to "All"
     }
 
-    private void readExcelFile() {
-
+    public static void readExcelFile(LinkedHashSet<Integer> selectedSchoolIDs) {
+        String sourceData = "C:\\Users\\5CG6105SVT\\Desktop\\LTE-SM-2023-Allocation-List-Lots-1415161718-Nikka-Trading.xlsx";
         String templatePath = "res/template/Load_Plan_Template.xlsx";
         String outputPath = "C:\\Users\\5CG6105SVT\\Desktop\\output.xlsx";
 
-        try (FileInputStream fis = new FileInputStream(templatePath);
-             Workbook workbook = new XSSFWorkbook(fis)) {
+        List<List<Integer>> sameSchoolIDRows = new ArrayList<>(); // List to store sets of row numbers with same school ID
 
-            // Get the first sheet
-            Sheet sheet = workbook.getSheetAt(0);
+        try (FileInputStream sourceFis = new FileInputStream(sourceData);
+             FileInputStream templateFis = new FileInputStream(templatePath);
+             Workbook sourceWorkbook = new XSSFWorkbook(sourceFis);
+             Workbook templateWorkbook = new XSSFWorkbook(templateFis)) {
 
-            // Modify the template as needed
-            // For example, setting a value in the first cell
-            Row row = sheet.getRow(0);
-            if (row == null) {
-                row = sheet.createRow(0);
+            // Get the first sheet of the source data
+            Sheet sourceSheet = sourceWorkbook.getSheetAt(0);
+
+            // Get the first sheet of the template
+            Sheet templateSheet = templateWorkbook.getSheetAt(0);
+
+            // Get the style of row 13 of the template
+            Row styleRow = templateSheet.getRow(12);
+            CellStyle[] templateStyles = new CellStyle[styleRow.getLastCellNum()];
+            for (int i = 0; i < styleRow.getLastCellNum(); i++) {
+                templateStyles[i] = styleRow.getCell(i).getCellStyle();
             }
-            Cell cell = row.getCell(0);
-            if (cell == null) {
-                cell = row.createCell(0);
+
+            int outputRowNum = 12; // Starting row index (zero-based) in the output sheet
+            String previousSchoolID = null; // Variable to store previous school ID
+
+            List<Integer> currentSet = new ArrayList<>(); // Current set of rows with the same school ID
+
+            int listNum = 1;
+            // Iterate over each school ID in the selectedSchoolIDs set
+            for (Integer selectedSchoolID : selectedSchoolIDs) {
+                // Iterate over the rows in the source sheet and find matching school IDs
+                for (Row row : sourceSheet) {
+                    Cell cell = row.getCell(2); // Assuming school ID is in the third column (index 2)
+                    if (cell != null && cell.getCellType() == CellType.NUMERIC) {
+                        int schoolID = (int) cell.getNumericCellValue();
+                        if (schoolID == selectedSchoolID) {
+
+                            String cellDivision = getCellValue(row.getCell(1));
+                            String cellSchoolID = getCellValue(row.getCell(2));
+                            String cellSchoolName = getCellValue(row.getCell(3));
+                            String cellGradeLevel = getCellValue(row.getCell(4));
+
+                            // Check if the current school ID is the same as the previous one
+                            if (previousSchoolID != null && previousSchoolID.equals(cellSchoolID)) {
+                                currentSet.add(outputRowNum); // Add the row number to the current set
+                            } else {
+                                if (!currentSet.isEmpty()) {
+                                    sameSchoolIDRows.add(new ArrayList<>(currentSet)); // Store the current set
+                                    currentSet.clear(); // Clear the current set
+                                }
+
+                                currentSet.add(outputRowNum); // Start a new set with the current row number
+                            }
+
+                            // Create a new row in the template sheet
+                            Row templateRow = templateSheet.createRow(outputRowNum++);
+
+                            // Write values to the new row in the template sheet with styles
+
+                            if (!cellSchoolID.equals(previousSchoolID)) {
+                                createStyledCell(templateRow, 0, String.valueOf(listNum), templateStyles[0]);
+                                listNum++;
+                            }
+                            // Update previousSchoolID to current cellSchoolID
+                            previousSchoolID = cellSchoolID;
+
+                            createStyledCell(templateRow, 1, cellDivision, templateStyles[1]);
+                            createStyledCell(templateRow, 2, "", templateStyles[2]);
+                            createStyledCell(templateRow, 3, cellSchoolID, templateStyles[3]);
+                            createStyledCell(templateRow, 4, cellSchoolName, templateStyles[4]);
+                            createStyledCell(templateRow, 5, cellGradeLevel, templateStyles[5]);
+                            createStyledCell(templateRow, 6, "", templateStyles[6]);
+                            createStyledCell(templateRow, 7, "", templateStyles[7]);
+                            createStyledCell(templateRow, 8, "", templateStyles[8]);
+                            createStyledCell(templateRow, 9, "", templateStyles[9]);
+                            createStyledCell(templateRow, 10, "", templateStyles[10]);
+                            createStyledCell(templateRow, 11, "", templateStyles[11]);
+                            createStyledCell(templateRow, 12, "", templateStyles[12]);
+                            createStyledCell(templateRow, 13, "", templateStyles[13]);
+                            createStyledCell(templateRow, 14, "", templateStyles[14]);
+                        }
+                    }
+                }
+
+                // Store the last set of rows if any
+                if (!currentSet.isEmpty()) {
+                    sameSchoolIDRows.add(new ArrayList<>(currentSet));
+                    currentSet.clear();
+                }
+
+                // Reset previousSchoolID for the next selectedSchoolID
+                previousSchoolID = null;
             }
-            //cell.setCellValue("Hello, World!");
+
+            // Merge cells in columns A to D for each set of row numbers with the same school ID
+            for (List<Integer> rowSet : sameSchoolIDRows) {
+                if (rowSet.size() > 1) {
+                    for (int colNum = 0; colNum < 5; colNum++) {
+                        CellRangeAddress cellRangeAddress = new CellRangeAddress(rowSet.get(0), rowSet.get(rowSet.size() - 1), colNum, colNum);
+                        templateSheet.addMergedRegion(cellRangeAddress);
+                    }
+                }
+            }
 
             // Write the changes to a new file
             try (FileOutputStream fos = new FileOutputStream(outputPath)) {
-                workbook.write(fos);
+                templateWorkbook.write(fos);
             }
 
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private static String getCellValue(Cell cell) {
+        if (cell != null) {
+            return switch (cell.getCellType()) {
+                case STRING -> cell.getStringCellValue();
+                case NUMERIC -> String.valueOf(cell.getNumericCellValue());
+                case BOOLEAN -> String.valueOf(cell.getBooleanCellValue());
+                default -> "Unknown Cell Type";
+            };
+        }
+        return "Unknown Cell Type";
+    }
+
+    private static void createStyledCell(Row row, int column, String value, CellStyle style) {
+        Cell cell = row.createCell(column);
+        cell.setCellValue(value);
+        cell.setCellStyle(style);
     }
 
 }
