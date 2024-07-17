@@ -1,149 +1,218 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.*?>
-<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
-<Pane xmlns:fx="http://javafx.com/fxml/1" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity"
-      minWidth="-Infinity"
-      prefHeight="700.0" prefWidth="1200.0" xmlns="http://javafx.com/javafx/21"
-      fx:controller="org.example.loadplan_automation.HelloController">
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+
+<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="700.0" prefWidth="1200.0" xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.loadplan_automation.HelloController">
     <children>
-        <VBox layoutX="25.0" layoutY="25.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
-              minHeight="-Infinity" minWidth="-Infinity" prefHeight="650.0" prefWidth="1150.0">
+        <VBox layoutX="25.0" layoutY="25.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="650.0" prefWidth="1150.0">
             <children>
                 <HBox prefHeight="100.0" prefWidth="200.0">
                     <children>
                         <ImageView fitHeight="111.0" fitWidth="231.0" pickOnBounds="true" preserveRatio="true">
                             <image>
-                                <Image url="@assets/Nikka-logo.png"/>
+                                <Image url="@assets/Nikka-logo.png" />
                             </image>
                             <HBox.margin>
-                                <Insets left="20.0"/>
+                                <Insets left="20.0" />
                             </HBox.margin>
                         </ImageView>
                         <VBox prefHeight="102.0" prefWidth="544.0">
                             <children>
                                 <Text strokeType="OUTSIDE" strokeWidth="0.0" text="NIKKA TRADING">
                                     <font>
-                                        <Font name="System Bold Italic" size="47.0"/>
+                                        <Font name="System Bold Italic" size="47.0" />
                                     </font>
                                 </Text>
                                 <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Truck Loading Automation">
                                     <font>
-                                        <Font size="30.0"/>
+                                        <Font size="30.0" />
                                     </font>
                                 </Text>
                             </children>
                             <HBox.margin>
-                                <Insets left="50.0"/>
+                                <Insets left="50.0" />
                             </HBox.margin>
                         </VBox>
                     </children>
                 </HBox>
-                <VBox prefHeight="504.0" prefWidth="1150.0">
+                <VBox prefHeight="463.0" prefWidth="1150.0">
                     <children>
                         <Label text="School List">
                             <font>
-                                <Font size="20.0"/>
+                                <Font size="20.0" />
                             </font>
                             <VBox.margin>
-                                <Insets left="20.0" top="20.0"/>
+                                <Insets left="20.0" top="20.0" />
                             </VBox.margin>
                         </Label>
                         <HBox prefHeight="39.0" prefWidth="755.0">
                             <VBox.margin>
-                                <Insets top="15.0"/>
+                                <Insets top="15.0" />
                             </VBox.margin>
                             <children>
                                 <Label maxHeight="1.7976931348623157E308" style="-fx-font-weight: bold;" text="Region">
                                     <font>
-                                        <Font size="15.0"/>
+                                        <Font size="15.0" />
                                     </font>
                                     <HBox.margin>
-                                        <Insets left="20.0" right="15.0"/>
+                                        <Insets left="20.0" right="15.0" />
                                     </HBox.margin>
                                 </Label>
                                 <ComboBox fx:id="drop_region" prefWidth="150.0" promptText="All">
                                     <HBox.margin>
-                                        <Insets right="30.0" top="7.0"/>
+                                        <Insets right="30.0" top="7.0" />
                                     </HBox.margin>
                                 </ComboBox>
-                                <Label maxHeight="1.7976931348623157E308" style="-fx-font-weight: bold;"
-                                       text="Division">
+                                <Label maxHeight="1.7976931348623157E308" style="-fx-font-weight: bold;" text="Division">
                                     <font>
-                                        <Font size="15.0"/>
+                                        <Font size="15.0" />
                                     </font>
                                     <HBox.margin>
-                                        <Insets right="15.0"/>
+                                        <Insets right="15.0" />
                                     </HBox.margin>
                                 </Label>
                                 <ComboBox fx:id="drop_division" prefWidth="150.0" promptText="All">
                                     <HBox.margin>
-                                        <Insets right="30.0" top="7.0"/>
+                                        <Insets right="30.0" top="7.0" />
                                     </HBox.margin>
                                 </ComboBox>
-                                <Label maxHeight="1.7976931348623157E308" style="-fx-font-weight: bold;"
-                                       text="Grade Level">
+                                <Label maxHeight="1.7976931348623157E308" style="-fx-font-weight: bold;" text="Grade Level">
                                     <font>
-                                        <Font size="15.0"/>
+                                        <Font size="15.0" />
                                     </font>
                                     <HBox.margin>
-                                        <Insets right="15.0"/>
+                                        <Insets right="15.0" />
                                     </HBox.margin>
                                 </Label>
                                 <ComboBox fx:id="drop_grade" prefWidth="150.0" promptText="All">
                                     <HBox.margin>
-                                        <Insets right="30.0" top="7.0"/>
+                                        <Insets right="30.0" top="7.0" />
                                     </HBox.margin>
                                 </ComboBox>
                                 <Label maxHeight="1.7976931348623157E308" style="-fx-font-weight: bold;" text="Search">
                                     <font>
-                                        <Font size="15.0"/>
+                                        <Font size="15.0" />
                                     </font>
                                     <HBox.margin>
-                                        <Insets right="15.0"/>
+                                        <Insets right="15.0" />
                                     </HBox.margin>
                                 </Label>
-                                <TextField prefHeight="28.0" prefWidth="250.0" promptText="   type here..."
-                                           style="-fx-border-color: black;">
+                                <TextField prefHeight="28.0" prefWidth="250.0" promptText="   type here..." style="-fx-border-color: black;">
                                     <HBox.margin>
-                                        <Insets left="15.0" top="7.0"/>
+                                        <Insets left="15.0" top="7.0" />
                                     </HBox.margin>
                                 </TextField>
                             </children>
                         </HBox>
-                        <TableView fx:id="table" prefHeight="375.0" prefWidth="1120.0">
+                        <TableView fx:id="table" prefHeight="350.0" prefWidth="1120.0">
                             <columns>
                                 <TableColumn fx:id="selectColumn" prefWidth="60.0">
                                     <graphic>
-                                        <CheckBox fx:id="selectAllCheckbox" mnemonicParsing="false" text="Select All"/>
+                                        <CheckBox fx:id="selectAllCheckbox" mnemonicParsing="false" text="Select All" />
                                     </graphic>
                                 </TableColumn>
-                                <TableColumn fx:id="region" prefWidth="77.0" text="Region"/>
-                                <TableColumn fx:id="division" prefWidth="77.0" text="Division"/>
-                                <TableColumn fx:id="schoolID" prefWidth="77.0" text="School ID"/>
-                                <TableColumn fx:id="schoolName" prefWidth="655.8" text="School Name"/>
-                                <TableColumn fx:id="gradeLevel" minWidth="0.0" prefWidth="138.2" text="Grade Level"/>
+                                <TableColumn fx:id="region" prefWidth="77.0" text="Region" />
+                                <TableColumn fx:id="division" prefWidth="77.0" text="Division" />
+                                <TableColumn fx:id="schoolID" prefWidth="77.0" text="School ID" />
+                                <TableColumn fx:id="schoolName" prefWidth="655.8" text="School Name" />
+                                <TableColumn fx:id="gradeLevel" minWidth="0.0" prefWidth="138.2" text="Grade Level" />
                             </columns>
                             <VBox.margin>
-                                <Insets left="15.0" right="15.0" top="15.0"/>
+                                <Insets left="15.0" right="15.0" top="15.0" />
                             </VBox.margin>
                         </TableView>
                     </children>
                 </VBox>
-                <Button fx:id="generate" mnemonicParsing="false" prefHeight="51.0" prefWidth="300.0"
-                        style="-fx-background-color: lime green; -fx-border-color: black;" text="NEXT"
-                        textAlignment="CENTER">
-                    <font>
-                        <Font name="Arial Bold" size="20.0"/>
-                    </font>
-                    <VBox.margin>
-                        <Insets left="800.0"/>
-                    </VBox.margin>
-                </Button>
+            <HBox prefHeight="100.0" prefWidth="200.0">
+               <children>
+                  <VBox prefHeight="93.0" prefWidth="835.0">
+                     <children>
+                        <Label text="Lots:">
+                           <font>
+                              <Font size="18.0" />
+                           </font>
+                           <VBox.margin>
+                              <Insets />
+                           </VBox.margin>
+                        </Label>
+                        <HBox prefHeight="100.0" prefWidth="200.0">
+                           <children>
+                              <CheckBox mnemonicParsing="false" text="10">
+                                 <HBox.margin>
+                                    <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+                                 </HBox.margin>
+                              </CheckBox>
+                              <CheckBox mnemonicParsing="false" text="11">
+                                 <HBox.margin>
+                                    <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+                                 </HBox.margin>
+                              </CheckBox>
+                              <CheckBox mnemonicParsing="false" text="12">
+                                 <HBox.margin>
+                                    <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+                                 </HBox.margin>
+                              </CheckBox>
+                              <CheckBox mnemonicParsing="false" text="14">
+                                 <HBox.margin>
+                                    <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+                                 </HBox.margin>
+                              </CheckBox>
+                              <CheckBox mnemonicParsing="false" text="15">
+                                 <HBox.margin>
+                                    <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+                                 </HBox.margin>
+                              </CheckBox>
+                              <CheckBox mnemonicParsing="false" text="16">
+                                 <HBox.margin>
+                                    <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+                                 </HBox.margin>
+                              </CheckBox>
+                              <CheckBox mnemonicParsing="false" text="17">
+                                 <HBox.margin>
+                                    <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+                                 </HBox.margin>
+                              </CheckBox>
+                              <CheckBox mnemonicParsing="false" text="18">
+                                 <HBox.margin>
+                                    <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+                                 </HBox.margin>
+                              </CheckBox>
+                              <CheckBox mnemonicParsing="false" text="19">
+                                 <HBox.margin>
+                                    <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+                                 </HBox.margin>
+                              </CheckBox>
+                           </children>
+                        </HBox>
+                     </children>
+                     <padding>
+                        <Insets bottom="10.0" left="20.0" right="20.0" top="10.0" />
+                     </padding>
+                  </VBox>
+                      <Button fx:id="generate" mnemonicParsing="false" prefHeight="51.0" prefWidth="300.0" style="-fx-background-color: lime green; -fx-border-color: black;" text="NEXT" textAlignment="CENTER">
+                          <font>
+                              <Font name="Arial Bold" size="20.0" />
+                          </font>
+                     <HBox.margin>
+                        <Insets top="20.0" />
+                     </HBox.margin>
+                      </Button>
+               </children>
+            </HBox>
             </children>
         </VBox>
     </children>
