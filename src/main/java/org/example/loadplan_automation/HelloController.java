@@ -6,12 +6,11 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import org.apache.poi.EncryptedDocumentException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -250,25 +249,35 @@ public class HelloController implements Initializable {
     }
 
     private void readExcelFile() {
-        String filePath = "C:\\Users\\5CG6105SVT\\Desktop\\LTE-SM-2023-Allocation-List-Lots-1415161718-Nikka-Trading.xlsx";
 
-        try (FileInputStream fis = new FileInputStream(new File(filePath));
-             Workbook workbook = WorkbookFactory.create(fis)) {
+        String templatePath = "res/template/Load_Plan_Template.xlsx";
+        String outputPath = "C:\\Users\\5CG6105SVT\\Desktop\\output.xlsx";
+
+        try (FileInputStream fis = new FileInputStream(templatePath);
+             Workbook workbook = new XSSFWorkbook(fis)) {
 
             // Get the first sheet
             Sheet sheet = workbook.getSheetAt(0);
 
-            // Iterate through each row
-            for (Row row : sheet) {
-                // Iterate through each cell in the row
-                for (Cell cell : row) {
-                    // Print the cell value
-                    System.out.print(cell.toString() + "\t");
-                }
-                System.out.println(); // Move to the next line for the next row
+            // Modify the template as needed
+            // For example, setting a value in the first cell
+            Row row = sheet.getRow(0);
+            if (row == null) {
+                row = sheet.createRow(0);
             }
-        } catch (IOException | EncryptedDocumentException ex) {
-            ex.printStackTrace();
+            Cell cell = row.getCell(0);
+            if (cell == null) {
+                cell = row.createCell(0);
+            }
+            //cell.setCellValue("Hello, World!");
+
+            // Write the changes to a new file
+            try (FileOutputStream fos = new FileOutputStream(outputPath)) {
+                workbook.write(fos);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

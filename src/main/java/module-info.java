@@ -5,6 +5,7 @@ module org.example.loadplan_automation {
     requires com.dlsc.formsfx;
     requires org.json;
     requires org.apache.poi.poi;
+    requires org.apache.poi.ooxml;
 
     opens org.example.loadplan_automation to javafx.fxml;
     exports org.example.loadplan_automation;
