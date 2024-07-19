@@ -11,6 +11,7 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.example.loadplan_automation.Models.LotSummary_Model;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -28,8 +29,10 @@ public class HelloController implements Initializable {
     private final Set<String> allGradeLevels = new HashSet<>();
     private final LinkedHashSet<Integer> selectedSchoolIDs = new LinkedHashSet<>();
     private final List<Integer> selectedCheckBoxValues = new ArrayList<>();
+    private final List<LotSummary_Model> lotRowsModel =  new ArrayList<>();
     private int checkLotCount = 1;
 
+    // For checkboxes of LOT numbers
     @FXML
     private CheckBox checkBoxLot10;
     @FXML
@@ -49,6 +52,7 @@ public class HelloController implements Initializable {
     @FXML
     private CheckBox checkBoxLot19;
 
+    // For table controls
     @FXML
     private ComboBox<String> drop_region;
     @FXML
@@ -80,6 +84,7 @@ public class HelloController implements Initializable {
     public void initialize(URL url, ResourceBundle resources) {
         initializeTableColumns();
         fetchDataFromPHP();
+        insertTemplateLotRows();
 
         // Event listener for drop_region ComboBox
         drop_region.setOnAction(event -> {
@@ -126,6 +131,14 @@ public class HelloController implements Initializable {
 
         // Add listeners to checkboxes
         addCheckboxListeners();
+    }
+
+    private void insertTemplateLotRows() {
+        lotRowsModel.add(new LotSummary_Model(12, 53, 27)); // For lot 12
+        lotRowsModel.add(new LotSummary_Model(14, 81, 18)); // For lot 14
+        lotRowsModel.add(new LotSummary_Model(16, 115, 16)); // For lot 16
+        lotRowsModel.add(new LotSummary_Model(17, 132, 12)); // For lot 17
+        lotRowsModel.add(new LotSummary_Model(18, 145, 8)); // For lot 18
     }
 
     private void initializeTableColumns() {
@@ -294,7 +307,7 @@ public class HelloController implements Initializable {
         boolean matchesRegion = selectedRegion == null || selectedRegion.equals("All") || regionModel.getRegion().equals(selectedRegion);
         boolean matchesDivision = selectedDivision == null || selectedDivision.equals("All") || regionModel.getDivision().equals(selectedDivision);
         boolean matchesGrade = selectedGrade == null || selectedGrade.equals("All") || Arrays.asList(regionModel.getGradeLevel().split(",")).contains(selectedGrade);
-        boolean matchesSearch = searchText == null || searchText.isEmpty() || String.valueOf(regionModel.getSchoolID()).contains(searchText);
+        boolean matchesSearch = searchText.isEmpty() || String.valueOf(regionModel.getSchoolID()).contains(searchText);
 
         return matchesRegion && matchesDivision && matchesGrade && matchesSearch;
     }
@@ -334,18 +347,6 @@ public class HelloController implements Initializable {
         String templatePath = "res/template/Load_Plan_Template.xlsx";
         String outputPath = "C:\\Users\\5CG6105SVT\\Desktop\\output.xlsx";
 
-        int lot12_rowNum = 53;
-        int lot14_rowNum = 81;
-        int lot16_rowNum = 115;
-        int lot17_rowNum = 132;
-        int lot18_rowNum = 145;
-
-        int lot12_rowCounts = 27;
-        int lot14_rowCounts = 18;
-        int lot16_rowCounts = 16;
-        int lot17_rowCounts = 12;
-        int lot18_rowCounts = 8;
-
         // Show warning if no School IDs are selected
         if (selectedSchoolIDs.isEmpty()) {
             Alert alert = new Alert(Alert.AlertType.WARNING, "No School IDs selected.", ButtonType.OK);
@@ -383,6 +384,8 @@ public class HelloController implements Initializable {
                 Cell cell = checkboxRow.createCell(startLotColumnIndex + i, CellType.NUMERIC);
                 cell.setCellValue("LOT "+selectedCheckBoxValues.get(i));
                 cell.setCellStyle(templateStyles[startLotColumnIndex + i]);
+
+
             }
 
             int outputRowNum = 12; // Starting row index in the output sheet

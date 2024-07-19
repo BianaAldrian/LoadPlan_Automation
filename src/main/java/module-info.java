@@ -9,4 +9,6 @@ module org.example.loadplan_automation {
 
     opens org.example.loadplan_automation to javafx.fxml;
     exports org.example.loadplan_automation;
+    exports org.example.loadplan_automation.Models;
+    opens org.example.loadplan_automation.Models to javafx.fxml;
 }
