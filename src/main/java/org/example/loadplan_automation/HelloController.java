@@ -27,6 +27,27 @@ public class HelloController implements Initializable {
     private final Set<String> allDivisions = new HashSet<>();
     private final Set<String> allGradeLevels = new HashSet<>();
     private final LinkedHashSet<Integer> selectedSchoolIDs = new LinkedHashSet<>();
+    private final List<Integer> selectedCheckBoxValues = new ArrayList<>();
+    private int checkLotCount = 1;
+
+    @FXML
+    private CheckBox checkBoxLot10;
+    @FXML
+    private CheckBox checkBoxLot11;
+    @FXML
+    private CheckBox checkBoxLot12;
+    @FXML
+    private CheckBox checkBoxLot14;
+    @FXML
+    private CheckBox checkBoxLot15;
+    @FXML
+    private CheckBox checkBoxLot16;
+    @FXML
+    private CheckBox checkBoxLot17;
+    @FXML
+    private CheckBox checkBoxLot18;
+    @FXML
+    private CheckBox checkBoxLot19;
 
     @FXML
     private ComboBox<String> drop_region;
@@ -34,6 +55,8 @@ public class HelloController implements Initializable {
     private ComboBox<String> drop_division;
     @FXML
     private ComboBox<String> drop_grade;
+    @FXML
+    private TextField searchSchoolID;
     @FXML
     private Button generate;
     @FXML
@@ -58,6 +81,7 @@ public class HelloController implements Initializable {
         initializeTableColumns();
         fetchDataFromPHP();
 
+        // Event listener for drop_region ComboBox
         drop_region.setOnAction(event -> {
             String selectedRegion = drop_region.getValue();
             System.out.println("Selected Region: " + selectedRegion);
@@ -92,12 +116,20 @@ public class HelloController implements Initializable {
         // Event handler for the generate button
         generate.setOnAction(event -> {
             System.out.println("Selected School IDs: " + selectedSchoolIDs);
-
             readExcelFile(selectedSchoolIDs);
         });
+
+        // Listener for searchSchoolID TextField
+        searchSchoolID.textProperty().addListener((observable, oldValue, newValue) -> {
+            filterList();
+        });
+
+        // Add listeners to checkboxes
+        addCheckboxListeners();
     }
 
     private void initializeTableColumns() {
+        // Initialize table columns with property values
         selectColumn.setCellValueFactory(new PropertyValueFactory<>("select"));
         region.setCellValueFactory(new PropertyValueFactory<>("region"));
         division.setCellValueFactory(new PropertyValueFactory<>("division"));
@@ -107,7 +139,7 @@ public class HelloController implements Initializable {
 
         table.setItems(filteredList);
 
-        // Add listeners to checkboxes
+        // Add listeners to rows to update selected school IDs
         table.setRowFactory(tv -> {
             TableRow<Region_model> row = new TableRow<>();
             row.itemProperty().addListener((obs, previousItem, currentItem) -> {
@@ -130,15 +162,49 @@ public class HelloController implements Initializable {
         }
     }
 
+    private void addCheckboxListeners() {
+        CheckBox[] checkBoxes = {checkBoxLot10, checkBoxLot11, checkBoxLot12, checkBoxLot14, checkBoxLot15,
+                checkBoxLot16, checkBoxLot17, checkBoxLot18, checkBoxLot19};
+
+        for (CheckBox checkBox : checkBoxes) {
+            checkBox.selectedProperty().addListener((obs, wasSelected, isSelected) -> {
+                int checkboxValue = Integer.parseInt(checkBox.getText());
+                if (isSelected) {
+                    selectedCheckBoxValues.add(checkboxValue);
+                    checkLotCount++;
+                    if (checkLotCount > 5) {
+                        for (CheckBox cb : checkBoxes) {
+                            if (!cb.isSelected()) {
+                                cb.setDisable(true);
+                            }
+                        }
+                    }
+                } else {
+                    selectedCheckBoxValues.remove((Integer) checkboxValue);
+                    checkLotCount--;
+                    if (checkLotCount <= 5) {
+                        for (CheckBox cb : checkBoxes) {
+                            cb.setDisable(false);
+                        }
+                    }
+                }
+                // Sort the list of selected checkbox values
+                Collections.sort(selectedCheckBoxValues);
+                System.out.println("Selected Checkboxes Values (sorted): " + selectedCheckBoxValues);
+            });
+        }
+    }
+
     private void fetchDataFromPHP() {
         new Thread(() -> {
             try {
-                // Construct URL with query parameter
-                String urlString = "http://192.168.254.104/NIKKA/get_data.php";
+                // Construct URL for PHP data
+                String urlString = "http://192.168.1.229/NIKKA/get_data.php";
                 URL url = new URL(urlString);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
 
+                // Read data from URL
                 BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
                 StringBuilder content = new StringBuilder();
                 String inputLine;
@@ -209,104 +275,139 @@ public class HelloController implements Initializable {
 
             } catch (Exception e) {
                 e.printStackTrace();
-                // Handle error gracefully, e.g., by showing an alert to the user
             }
         }).start();
     }
 
-
     private void filterList() {
-        String selectedRegion = drop_region.getValue();
-        String selectedDivision = drop_division.getValue();
-        String selectedGrade = drop_grade.getValue();
-
         filteredList.setAll(list.stream()
-                .filter(regionModel -> "All".equals(selectedRegion) || regionModel.getRegion().equals(selectedRegion))
-                .filter(regionModel -> "All".equals(selectedDivision) || regionModel.getDivision().equals(selectedDivision))
-                .filter(regionModel -> "All".equals(selectedGrade) || regionModel.getGradeLevel().equals(selectedGrade))
+                .filter(this::matchesFilter)
                 .collect(Collectors.toList()));
     }
 
-    private void updateDivisionComboBox(String regionName) {
-        Set<String> divisions = new HashSet<>();
-        if ("All".equals(regionName)) {
-            divisions = allDivisions;
-        } else {
-            divisions = list.stream()
-                    .filter(regionModel -> regionModel.getRegion().equals(regionName))
-                    .map(Region_model::getDivision)
-                    .collect(Collectors.toSet());
+    private boolean matchesFilter(Region_model regionModel) {
+        String selectedRegion = drop_region.getValue();
+        String selectedDivision = drop_division.getValue();
+        String selectedGrade = drop_grade.getValue();
+        String searchText = searchSchoolID.getText().toLowerCase();
+
+        boolean matchesRegion = selectedRegion == null || selectedRegion.equals("All") || regionModel.getRegion().equals(selectedRegion);
+        boolean matchesDivision = selectedDivision == null || selectedDivision.equals("All") || regionModel.getDivision().equals(selectedDivision);
+        boolean matchesGrade = selectedGrade == null || selectedGrade.equals("All") || Arrays.asList(regionModel.getGradeLevel().split(",")).contains(selectedGrade);
+        boolean matchesSearch = searchText == null || searchText.isEmpty() || String.valueOf(regionModel.getSchoolID()).contains(searchText);
+
+        return matchesRegion && matchesDivision && matchesGrade && matchesSearch;
+    }
+
+    private void updateDivisionComboBox(String selectedRegion) {
+        Set<String> filteredDivisions = new HashSet<>();
+        for (Region_model item : list) {
+            if (selectedRegion.equals("All") || item.getRegion().equals(selectedRegion)) {
+                filteredDivisions.add(item.getDivision());
+            }
         }
 
-        ObservableList<String> divisionItems = FXCollections.observableArrayList(divisions);
+        ObservableList<String> divisionItems = FXCollections.observableArrayList(filteredDivisions);
         divisionItems.add(0, "All");
         drop_division.setItems(divisionItems);
         drop_division.setValue("All"); // Set default value to "All"
     }
 
-    private void updateGradeComboBox(String divisionName) {
-        Set<String> gradeLevels = new HashSet<>();
-        if ("All".equals(divisionName) || divisionName == null) {
-            gradeLevels = allGradeLevels;
-        } else {
-            gradeLevels = list.stream()
-                    .filter(regionModel -> regionModel.getDivision().equals(divisionName))
-                    .map(Region_model::getGradeLevel)
-                    .collect(Collectors.toSet());
+    private void updateGradeComboBox(String selectedDivision) {
+        Set<String> filteredGrades = new HashSet<>();
+        for (Region_model item : list) {
+            if ((selectedDivision == null || selectedDivision.equals("All") || item.getDivision().equals(selectedDivision))
+                    && (drop_region.getValue() == null || drop_region.getValue().equals("All") || item.getRegion().equals(drop_region.getValue()))) {
+                filteredGrades.addAll(Arrays.asList(item.getGradeLevel().split(",")));
+            }
         }
 
-        ObservableList<String> gradeItems = FXCollections.observableArrayList(gradeLevels);
+        ObservableList<String> gradeItems = FXCollections.observableArrayList(filteredGrades);
         gradeItems.add(0, "All");
         drop_grade.setItems(gradeItems);
         drop_grade.setValue("All"); // Set default value to "All"
     }
 
-    public static void readExcelFile(LinkedHashSet<Integer> selectedSchoolIDs) {
+    public void readExcelFile(LinkedHashSet<Integer> selectedSchoolIDs) {
+        // Paths to the source data file, template file, and output file
         String sourceData = "C:\\Users\\5CG6105SVT\\Desktop\\LTE-SM-2023-Allocation-List-Lots-1415161718-Nikka-Trading.xlsx";
         String templatePath = "res/template/Load_Plan_Template.xlsx";
         String outputPath = "C:\\Users\\5CG6105SVT\\Desktop\\output.xlsx";
 
-        List<List<Integer>> sameSchoolIDRows = new ArrayList<>(); // List to store sets of row numbers with same school ID
+        int lot12_rowNum = 53;
+        int lot14_rowNum = 81;
+        int lot16_rowNum = 115;
+        int lot17_rowNum = 132;
+        int lot18_rowNum = 145;
+
+        int lot12_rowCounts = 27;
+        int lot14_rowCounts = 18;
+        int lot16_rowCounts = 16;
+        int lot17_rowCounts = 12;
+        int lot18_rowCounts = 8;
+
+        // Show warning if no School IDs are selected
+        if (selectedSchoolIDs.isEmpty()) {
+            Alert alert = new Alert(Alert.AlertType.WARNING, "No School IDs selected.", ButtonType.OK);
+            alert.showAndWait();
+            return;
+        }
+
+        // List to store sets of row numbers with the same school ID
+        List<List<Integer>> sameSchoolIDRows = new ArrayList<>();
 
         try (FileInputStream sourceFis = new FileInputStream(sourceData);
              FileInputStream templateFis = new FileInputStream(templatePath);
              Workbook sourceWorkbook = new XSSFWorkbook(sourceFis);
              Workbook templateWorkbook = new XSSFWorkbook(templateFis)) {
 
-            // Get the first sheet of the source data
+            // Get the first sheet of the source data and template
             Sheet sourceSheet = sourceWorkbook.getSheetAt(0);
-
-            // Get the first sheet of the template
             Sheet templateSheet = templateWorkbook.getSheetAt(0);
 
-            // Get the style of row 13 of the template
-            Row styleRow = templateSheet.getRow(12);
+            // Prepare the row and style for writing checkbox values to the template
+            int startLotColumnIndex = 6; // Column G
+            int LotRowIndex = 10; // Row 11 (0-based index)
+            Row styleRow = templateSheet.getRow(12); // Row with styles in the template
             CellStyle[] templateStyles = new CellStyle[styleRow.getLastCellNum()];
             for (int i = 0; i < styleRow.getLastCellNum(); i++) {
                 templateStyles[i] = styleRow.getCell(i).getCellStyle();
             }
+            Row checkboxRow = templateSheet.getRow(LotRowIndex);
+            if (checkboxRow == null) {
+                checkboxRow = templateSheet.createRow(LotRowIndex);
+            }
 
-            int outputRowNum = 12; // Starting row index (zero-based) in the output sheet
-            String previousSchoolID = null; // Variable to store previous school ID
+            // Set the selected LOT values in the template
+            for (int i = 0; i < selectedCheckBoxValues.size() && i < 5; i++) {
+                Cell cell = checkboxRow.createCell(startLotColumnIndex + i, CellType.NUMERIC);
+                cell.setCellValue("LOT "+selectedCheckBoxValues.get(i));
+                cell.setCellStyle(templateStyles[startLotColumnIndex + i]);
+            }
 
-            List<Integer> currentSet = new ArrayList<>(); // Current set of rows with the same school ID
-
+            int outputRowNum = 12; // Starting row index in the output sheet
+            int rowCount = 1;
+            int maxRowCount = 23;
+            String previousSchoolID = null;
+            List<Integer> currentSet = new ArrayList<>();
             int listNum = 1;
-            // Iterate over each school ID in the selectedSchoolIDs set
+
+            // Iterate over each selected School ID
             for (Integer selectedSchoolID : selectedSchoolIDs) {
-                // Iterate over the rows in the source sheet and find matching school IDs
+                // Iterate over rows in the source sheet to find matching School IDs
                 for (Row row : sourceSheet) {
-                    Cell cell = row.getCell(2); // Assuming school ID is in the third column (index 2)
+                    Cell cell = row.getCell(2); // Assuming School ID is in the third column (index 2)
                     if (cell != null && cell.getCellType() == CellType.NUMERIC) {
                         int schoolID = (int) cell.getNumericCellValue();
                         if (schoolID == selectedSchoolID) {
 
+                            // Data from the source sheet
                             String cellDivision = getCellValue(row.getCell(1));
                             String cellSchoolID = getCellValue(row.getCell(2));
                             String cellSchoolName = getCellValue(row.getCell(3));
                             String cellGradeLevel = getCellValue(row.getCell(4));
 
-                            // Check if the current school ID is the same as the previous one
+                            // Check if the current School ID is the same as the previous one
                             if (previousSchoolID != null && previousSchoolID.equals(cellSchoolID)) {
                                 currentSet.add(outputRowNum); // Add the row number to the current set
                             } else {
@@ -314,7 +415,6 @@ public class HelloController implements Initializable {
                                     sameSchoolIDRows.add(new ArrayList<>(currentSet)); // Store the current set
                                     currentSet.clear(); // Clear the current set
                                 }
-
                                 currentSet.add(outputRowNum); // Start a new set with the current row number
                             }
 
@@ -322,11 +422,11 @@ public class HelloController implements Initializable {
                             Row templateRow = templateSheet.createRow(outputRowNum++);
 
                             // Write values to the new row in the template sheet with styles
-
                             if (!cellSchoolID.equals(previousSchoolID)) {
                                 createStyledCell(templateRow, 0, String.valueOf(listNum), templateStyles[0]);
                                 listNum++;
                             }
+
                             // Update previousSchoolID to current cellSchoolID
                             previousSchoolID = cellSchoolID;
 
@@ -344,6 +444,13 @@ public class HelloController implements Initializable {
                             createStyledCell(templateRow, 12, "", templateStyles[12]);
                             createStyledCell(templateRow, 13, "", templateStyles[13]);
                             createStyledCell(templateRow, 14, "", templateStyles[14]);
+
+                            // Shift rows down if max row count is reached
+                            if (rowCount == maxRowCount) {
+                                int rowIndex = 37; // Insert before row 38
+                                templateSheet.shiftRows(rowIndex, templateSheet.getLastRowNum(), 35);
+                            }
+                            rowCount++;
                         }
                     }
                 }
@@ -358,7 +465,7 @@ public class HelloController implements Initializable {
                 previousSchoolID = null;
             }
 
-            // Merge cells in columns A to D for each set of row numbers with the same school ID
+            // Merge cells in columns A to D for each set of row numbers with the same School ID
             for (List<Integer> rowSet : sameSchoolIDRows) {
                 if (rowSet.size() > 1) {
                     for (int colNum = 0; colNum < 5; colNum++) {
@@ -368,7 +475,7 @@ public class HelloController implements Initializable {
                 }
             }
 
-            // Write the changes to a new file
+            // Write the changes to the output file
             try (FileOutputStream fos = new FileOutputStream(outputPath)) {
                 templateWorkbook.write(fos);
             }
@@ -378,6 +485,7 @@ public class HelloController implements Initializable {
         }
     }
 
+    // Method to get cell value as a string
     private static String getCellValue(Cell cell) {
         if (cell != null) {
             return switch (cell.getCellType()) {
@@ -390,10 +498,11 @@ public class HelloController implements Initializable {
         return "Unknown Cell Type";
     }
 
+    // Method to create a styled cell
     private static void createStyledCell(Row row, int column, String value, CellStyle style) {
         Cell cell = row.createCell(column);
         cell.setCellValue(value);
         cell.setCellStyle(style);
     }
-
 }
+

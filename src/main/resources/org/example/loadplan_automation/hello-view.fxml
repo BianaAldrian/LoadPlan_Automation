@@ -16,7 +16,7 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="700.0" prefWidth="1200.0" xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.loadplan_automation.HelloController">
+<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="700.0" prefWidth="1200.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.loadplan_automation.HelloController">
     <children>
         <VBox layoutX="25.0" layoutY="25.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="650.0" prefWidth="1150.0">
             <children>
@@ -37,7 +37,7 @@
                                         <Font name="System Bold Italic" size="47.0" />
                                     </font>
                                 </Text>
-                                <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Truck Loading Automation">
+                                <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Load Plan Automation">
                                     <font>
                                         <Font size="30.0" />
                                     </font>
@@ -111,7 +111,7 @@
                                         <Insets right="15.0" />
                                     </HBox.margin>
                                 </Label>
-                                <TextField prefHeight="28.0" prefWidth="250.0" promptText="   type here..." style="-fx-border-color: black;">
+                                <TextField fx:id="searchSchoolID" prefHeight="28.0" prefWidth="250.0" promptText="   type here..." style="-fx-border-color: black;">
                                     <HBox.margin>
                                         <Insets left="15.0" top="7.0" />
                                     </HBox.margin>
@@ -151,47 +151,47 @@
                         </Label>
                         <HBox prefHeight="100.0" prefWidth="200.0">
                            <children>
-                              <CheckBox mnemonicParsing="false" text="10">
+                              <CheckBox fx:id="checkBoxLot10" mnemonicParsing="false" text="10">
                                  <HBox.margin>
                                     <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
                                  </HBox.margin>
                               </CheckBox>
-                              <CheckBox mnemonicParsing="false" text="11">
+                              <CheckBox fx:id="checkBoxLot11" mnemonicParsing="false" text="11">
                                  <HBox.margin>
                                     <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
                                  </HBox.margin>
                               </CheckBox>
-                              <CheckBox mnemonicParsing="false" text="12">
+                              <CheckBox fx:id="checkBoxLot12" mnemonicParsing="false" text="12">
                                  <HBox.margin>
                                     <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
                                  </HBox.margin>
                               </CheckBox>
-                              <CheckBox mnemonicParsing="false" text="14">
+                              <CheckBox fx:id="checkBoxLot14" mnemonicParsing="false" text="14">
                                  <HBox.margin>
                                     <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
                                  </HBox.margin>
                               </CheckBox>
-                              <CheckBox mnemonicParsing="false" text="15">
+                              <CheckBox fx:id="checkBoxLot15" mnemonicParsing="false" text="15">
                                  <HBox.margin>
                                     <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
                                  </HBox.margin>
                               </CheckBox>
-                              <CheckBox mnemonicParsing="false" text="16">
+                              <CheckBox fx:id="checkBoxLot16" mnemonicParsing="false" text="16">
                                  <HBox.margin>
                                     <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
                                  </HBox.margin>
                               </CheckBox>
-                              <CheckBox mnemonicParsing="false" text="17">
+                              <CheckBox fx:id="checkBoxLot17" mnemonicParsing="false" text="17">
                                  <HBox.margin>
                                     <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
                                  </HBox.margin>
                               </CheckBox>
-                              <CheckBox mnemonicParsing="false" text="18">
+                              <CheckBox fx:id="checkBoxLot18" mnemonicParsing="false" text="18">
                                  <HBox.margin>
                                     <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
                                  </HBox.margin>
                               </CheckBox>
-                              <CheckBox mnemonicParsing="false" text="19">
+                              <CheckBox fx:id="checkBoxLot19" mnemonicParsing="false" text="19">
                                  <HBox.margin>
                                     <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
                                  </HBox.margin>
