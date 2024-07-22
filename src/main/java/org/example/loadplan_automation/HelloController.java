@@ -220,7 +220,7 @@ public class HelloController implements Initializable {
         new Thread(() -> {
             try {
                 // Construct URL for PHP data
-                String urlString = "http://192.168.254.100/NIKKA/get_data.php";
+                String urlString = "http://192.168.1.223/NIKKA/get_data.php";
                 URL url = new URL(urlString);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
@@ -377,6 +377,30 @@ public class HelloController implements Initializable {
             Sheet templateSheet = templateWorkbook.getSheetAt(0);
             Sheet summaryTemplateSheet = summaryTemplateWorkbook.getSheetAt(0);
 
+            // Set values in top of the sheet which is the row 1 to 6
+            // Set the values of selectedCheckBoxValues in E6 of templateSheet
+            int startLotsColumnIndex = 4; // Column E (0-based index for column E is 4)
+            int lotsRowIndex = 5; // Row 6 (0-based index for row 6 is 5)
+            Row lotRow = templateSheet.getRow(lotsRowIndex);
+            if (lotRow == null) {
+                lotRow = templateSheet.createRow(lotsRowIndex);
+            }
+
+            Cell cellLot = lotRow.getCell(startLotsColumnIndex);
+            if (cellLot == null) {
+                cellLot = lotRow.createCell(startLotsColumnIndex, CellType.STRING);
+            }
+
+            // Clone the existing cell style and apply it to the cell
+            CellStyle existingLotStyle = cellLot.getCellStyle();
+            CellStyle newCellLotStyle = templateWorkbook.createCellStyle();
+            newCellLotStyle.cloneStyleFrom(existingLotStyle);
+
+            // Set the value of selectedCheckBoxValues in cell E6
+            cellLot.setCellValue(selectedCheckBoxValues.toString().replaceAll("[\\[\\]]", ""));
+            cellLot.setCellStyle(newCellLotStyle);
+
+            // For LOT in item sheet
             int startLotColumnIndex = 6;
             int lotRowIndex = 10;
             Row styleRow = templateSheet.getRow(12);
@@ -389,10 +413,22 @@ public class HelloController implements Initializable {
                 checkboxRow = templateSheet.createRow(lotRowIndex);
             }
 
+            // to set LOT number in set
             for (int i = 0; i < selectedCheckBoxValues.size() && i < 5; i++) {
-                Cell cell = checkboxRow.createCell(startLotColumnIndex + i, CellType.STRING);
+                int cellIndex = startLotColumnIndex + i;
+                Cell cell = checkboxRow.getCell(cellIndex);
+
+                if (cell == null) {
+                    cell = checkboxRow.createCell(cellIndex, CellType.STRING);
+                }
+
+                // Clone the existing cell style and apply it to the cell
+                CellStyle existingStyle = cell.getCellStyle();
+                CellStyle newCellStyle = templateWorkbook.createCellStyle();
+                newCellStyle.cloneStyleFrom(existingStyle);
+
                 cell.setCellValue("LOT " + selectedCheckBoxValues.get(i));
-                cell.setCellStyle(templateStyles[startLotColumnIndex + i]);
+                cell.setCellStyle(newCellStyle);
             }
 
             int outputRowNum = 12;
@@ -536,6 +572,7 @@ public class HelloController implements Initializable {
                 mergedRegions.add(mergedRegion);
             }
         }
+
         mergedRegions.sort(Comparator.comparingInt(CellRangeAddress::getFirstColumn));
 
         for (CellRangeAddress cellData : mergedRegions) {
@@ -554,128 +591,129 @@ public class HelloController implements Initializable {
                 // Get the value of the first cell under the merged cell in row 2
                 Row row = sheet.getRow(1); // Row 2 (index 1)
                 if (row != null) {
-
                     while (!itemQtyFound) {
                         Cell cell = row.getCell(cellData.getFirstColumn() + cellCount);
-                        if (cell != null) {
-                            String value = cell.toString();
+                        if (cell == null || (cellData.getFirstColumn() + cellCount) > cellData.getLastColumn()) {
+                            // Reached the end of the merged cell range
+                            itemQtyFound = true;
+                            setOfItem.add(0); // Set the item to 0 as it reached the end of the cell range
+                            break;
+                        }
 
-                            // Get the row index of cellSchoolID
-                            int schoolIDRowIndex = cellSchoolID.getRowIndex();
+                        String value = cell.toString();
 
-                            // Get the value of the first cell under the merged cell in the row of cellSchoolID
-                            Row schoolIDRow = sheet.getRow(schoolIDRowIndex);
-                            if (schoolIDRow != null) {
-                                Cell schoolIDCell = schoolIDRow.getCell(cellData.getFirstColumn() + cellCount);
-                                if (schoolIDCell != null) {
-                                    double itemQty = Double.parseDouble(schoolIDCell.toString());
+                        // Get the row index of cellSchoolID
+                        int schoolIDRowIndex = cellSchoolID.getRowIndex();
 
-                                    if (itemQty != 0) {
-                                        //System.out.println("Value under the merged cell in row 2: " + value);
-                                       // System.out.println("Value under the merged cell in row of cellSchoolID: " + itemQty);
+                        // Get the value of the first cell under the merged cell in the row of cellSchoolID
+                        Row schoolIDRow = sheet.getRow(schoolIDRowIndex);
+                        if (schoolIDRow != null) {
+                            Cell schoolIDCell = schoolIDRow.getCell(cellData.getFirstColumn() + cellCount);
+                            if (schoolIDCell != null) {
+                                double itemQty = Double.parseDouble(schoolIDCell.toString());
 
-                                        // Get the value of column E (Grade Level)
-                                        Cell columnECell = schoolIDRow.getCell(4); // Column E is the 4th index (0-based)
-                                        if (columnECell != null) {
-                                            String columnEValue = columnECell.toString();
-                                            //System.out.println("Value of column E in the schoolIDRowIndex: " + columnEValue);
+                                if (itemQty != 0) {
+                                    //System.out.println("Value under the merged cell in row 2: " + value);
+                                    // System.out.println("Value under the merged cell in row of cellSchoolID: " + itemQty);
 
-                                            // Search for columnEValue in the basesSheet
-                                            boolean valueFound = false;
-                                            int endRowIndex = -1; // Initialize endRowIndex
+                                    // Get the value of column E (Grade Level)
+                                    Cell columnECell = schoolIDRow.getCell(4); // Column E is the 4th index (0-based)
+                                    if (columnECell != null) {
+                                        String columnEValue = columnECell.toString();
+                                        //System.out.println("Value of column E in the schoolIDRowIndex: " + columnEValue);
 
-                                            for (int startRowIndex = 0; startRowIndex <= basesSheet.getLastRowNum(); startRowIndex++) {
-                                                Row basesRow = basesSheet.getRow(startRowIndex);
-                                                if (basesRow != null) {
-                                                    Cell cellA = basesRow.getCell(0); // Column A is the 0th index (0-based)
-                                                    if (cellA != null && columnEValue.equals(cellA.toString())) {
-                                                        //System.out.println("Found columnEValue in basesSheet at row: " + startRowIndex);
-                                                        valueFound = true;
+                                        // Search for columnEValue in the basesSheet
+                                        boolean valueFound = false;
+                                        int endRowIndex = -1; // Initialize endRowIndex
 
-                                                        // Determine endRowIndex
-                                                        int tempRowIndex = startRowIndex;
-                                                        boolean isEmpty = false;
-                                                        while (!isEmpty && tempRowIndex <= basesSheet.getLastRowNum()) {
-                                                            Row findEmptyRow = basesSheet.getRow(tempRowIndex);
-                                                            if (findEmptyRow == null || findEmptyRow.getPhysicalNumberOfCells() == 0) {
+                                        for (int startRowIndex = 0; startRowIndex <= basesSheet.getLastRowNum(); startRowIndex++) {
+                                            Row basesRow = basesSheet.getRow(startRowIndex);
+                                            if (basesRow != null) {
+                                                Cell cellA = basesRow.getCell(0); // Column A is the 0th index (0-based)
+                                                if (cellA != null && columnEValue.equals(cellA.toString())) {
+                                                    //System.out.println("Found columnEValue in basesSheet at row: " + startRowIndex);
+                                                    valueFound = true;
+
+                                                    // Determine endRowIndex
+                                                    int tempRowIndex = startRowIndex;
+                                                    boolean isEmpty = false;
+                                                    while (!isEmpty && tempRowIndex <= basesSheet.getLastRowNum()) {
+                                                        Row findEmptyRow = basesSheet.getRow(tempRowIndex);
+                                                        if (findEmptyRow == null || findEmptyRow.getPhysicalNumberOfCells() == 0) {
+                                                            endRowIndex = tempRowIndex - 1; // Last non-empty row
+                                                            //System.out.println("End at row: " + endRowIndex);
+                                                            isEmpty = true;
+                                                        } else {
+                                                            boolean rowIsEmpty = true;
+                                                            for (Cell cell1 : findEmptyRow) {
+                                                                if (cell1.getCellType() != CellType.BLANK) {
+                                                                    rowIsEmpty = false;
+                                                                    break;
+                                                                }
+                                                            }
+                                                            if (rowIsEmpty) {
                                                                 endRowIndex = tempRowIndex - 1; // Last non-empty row
                                                                 //System.out.println("End at row: " + endRowIndex);
                                                                 isEmpty = true;
-                                                            } else {
-                                                                boolean rowIsEmpty = true;
-                                                                for (Cell cell1 : findEmptyRow) {
-                                                                    if (cell1.getCellType() != CellType.BLANK) {
-                                                                        rowIsEmpty = false;
-                                                                        break;
-                                                                    }
-                                                                }
-                                                                if (rowIsEmpty) {
-                                                                    endRowIndex = tempRowIndex - 1; // Last non-empty row
-                                                                    //System.out.println("End at row: " + endRowIndex);
-                                                                    isEmpty = true;
-                                                                }
-                                                            }
-                                                            tempRowIndex++;
-                                                        }
-
-                                                        // Search within the range from startRowIndex to endRowIndex
-                                                        if (endRowIndex != -1) {
-                                                            for (int searchRowIndex = startRowIndex; searchRowIndex <= endRowIndex; searchRowIndex++) {
-                                                                Row searchRow = basesSheet.getRow(searchRowIndex);
-                                                                if (searchRow != null) {
-                                                                    Cell searchCellA = searchRow.getCell(0);
-                                                                    if (searchCellA != null && value.equals(searchCellA.toString())) {
-                                                                        //System.out.println("Found value in the range at row: " + searchRowIndex);
-                                                                        // Perform further actions as needed
-                                                                        // Retrieve value from Cell B (Column 1)
-                                                                        Cell cellB = searchRow.getCell(1); // Column B is the 1st index (0-based)
-                                                                        if (cellB != null) {
-                                                                            double setOfItemValue = Double.parseDouble(cellB.toString());
-                                                                            //System.out.println("Value of Cell B in row " + searchRowIndex + ": " + setOfItemValue);
-
-                                                                            // Perform further actions with cellBValue if needed
-
-                                                                            int set = (int) (itemQty / setOfItemValue);
-                                                                            setOfItem.add(set); // Add the value to the list
-                                                                        } else {
-                                                                            setOfItem.add(0);
-                                                                            //System.out.println("Cell B (Column 1) is null in row: " + searchRowIndex);
-                                                                        }
-
-                                                                        // Perform further actions if needed and break out of loop
-                                                                        break;
-                                                                    }
-                                                                }
                                                             }
                                                         }
-
-                                                        break; // Exit loop once value is found
+                                                        tempRowIndex++;
                                                     }
+
+                                                    // Search within the range from startRowIndex to endRowIndex
+                                                    if (endRowIndex != -1) {
+                                                        for (int searchRowIndex = startRowIndex; searchRowIndex <= endRowIndex; searchRowIndex++) {
+                                                            Row searchRow = basesSheet.getRow(searchRowIndex);
+                                                            if (searchRow != null) {
+                                                                Cell searchCellA = searchRow.getCell(0);
+                                                                if (searchCellA != null && value.equals(searchCellA.toString())) {
+                                                                    //System.out.println("Found value in the range at row: " + searchRowIndex);
+                                                                    // Perform further actions as needed
+                                                                    // Retrieve value from Cell B (Column 1)
+                                                                    Cell cellB = searchRow.getCell(1); // Column B is the 1st index (0-based)
+                                                                    if (cellB != null) {
+                                                                        double setOfItemValue = Double.parseDouble(cellB.toString());
+                                                                        //System.out.println("Value of Cell B in row " + searchRowIndex + ": " + setOfItemValue);
+
+                                                                        // Perform further actions with cellBValue if needed
+
+                                                                        int set = (int) (itemQty / setOfItemValue);
+                                                                        setOfItem.add(set); // Add the value to the list
+                                                                    } else {
+                                                                        setOfItem.add(0);
+                                                                        //System.out.println("Cell B (Column 1) is null in row: " + searchRowIndex);
+                                                                    }
+
+                                                                    // Perform further actions if needed and break out of loop
+                                                                    break;
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+
+                                                    break; // Exit loop once value is found
                                                 }
                                             }
-                                            if (!valueFound) {
-                                                System.out.println("Value of columnEValue not found in basesSheet.");
-                                            }
-
-                                            itemQtyFound = true;
-                                        } else {
-                                            System.out.println("Column E in the schoolIDRowIndex is null.");
+                                        }
+                                        if (!valueFound) {
+                                            System.out.println("Value of columnEValue not found in basesSheet.");
                                         }
 
+                                        itemQtyFound = true;
                                     } else {
-                                        cellCount++;
+                                        System.out.println("Column E in the schoolIDRowIndex is null.");
                                     }
+
                                 } else {
-                                    System.out.println("Cell under the merged cell in row of cellSchoolID is null.");
+                                    cellCount++;
                                 }
                             } else {
-                                System.out.println("Row for cellSchoolID does not exist.");
+                                System.out.println("Cell under the merged cell in row of cellSchoolID is null.");
                             }
                         } else {
-                           // System.out.println("Cell under the merged cell in row 2 is null.");
+                            System.out.println("Row for cellSchoolID does not exist.");
                         }
                     }
-
                 } else {
                     System.out.println("Row 2 does not exist.");
                 }
