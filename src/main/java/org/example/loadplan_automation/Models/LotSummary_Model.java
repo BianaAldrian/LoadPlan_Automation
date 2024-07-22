@@ -2,13 +2,13 @@ package org.example.loadplan_automation.Models;
 
 public class LotSummary_Model {
     private int lot;
-    private int rowNum;
-    private int rowCounts;
+    private int startRow;
+    private int endRow;
 
-    public LotSummary_Model(int lot, int rowNum, int rowCounts) {
+    public LotSummary_Model(int lot, int startRow, int endRow) {
         this.lot = lot;
-        this.rowNum = rowNum;
-        this.rowCounts = rowCounts;
+        this.startRow = startRow;
+        this.endRow = endRow;
     }
 
     public int getLot() {
@@ -19,19 +19,19 @@ public class LotSummary_Model {
         this.lot = lot;
     }
 
-    public int getRowNum() {
-        return rowNum;
+    public int getStartRow() {
+        return startRow;
     }
 
-    public void setRowNum(int rowNum) {
-        this.rowNum = rowNum;
+    public void setStartRow(int startRow) {
+        this.startRow = startRow;
     }
 
-    public int getRowCounts() {
-        return rowCounts;
+    public int getEndRow() {
+        return endRow;
     }
 
-    public void setRowCounts(int rowCounts) {
-        this.rowCounts = rowCounts;
+    public void setEndRow(int endRow) {
+        this.endRow = endRow;
     }
 }
